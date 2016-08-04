@@ -18,47 +18,47 @@ class ViewController: UIViewController , UIImagePickerControllerDelegate, UINavi
 
     // MARK: IBActions
     
-    @IBAction func selectTapped(sender: AnyObject) {
+    @IBAction func selectTapped(_ sender: AnyObject) {
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
-        imagePicker.sourceType = .PhotoLibrary
-        self.presentViewController(imagePicker, animated: true, completion: nil)
+        imagePicker.sourceType = .photoLibrary
+        self.present(imagePicker, animated: true, completion: nil)
     }
     
-    @IBAction func runBenchmarkTapped(sender: AnyObject) {
+    @IBAction func runBenchmarkTapped(_ sender: AnyObject) {
         if let image = image {
-            let nValues: [Int] = [100, 1000, 2000, 5000, 10000]
-            let CGImage = image.CGImage
+            let nValues: [Int] = [100, 1000, 2000, 5000, 10000, 100000, 500000]
+            let CGImage = image.cgImage
             for n in nValues {
                 let ns = dispatch_benchmark(5) {
-                    dominantColorsInImage(CGImage, maxSampledPixels: n)
+                    _ = dominantColorsInImage(CGImage!, maxSampledPixels: n)
                     return
                 }
-                println("n = \(n) averaged \(ns/1000000) ms")
+                print("n = \(n) averaged \(ns/1000000) ms")
             }
         }
     }
     
     // MARK: ImagePicker Delegate
     
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [NSObject : AnyObject]!) {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [NSObject : AnyObject]!) {
         if let imageSelected = image {
             self.image = imageSelected
             imageView.image = imageSelected
             
-            let colors = imageSelected.dominantColors()
+            let colors = imageSelected.dominantColors(500000)
             for box in boxes {
-                box.backgroundColor = UIColor.clearColor()
+                box.backgroundColor = UIColor.clear()
             }
             for i in 0..<min(colors.count, boxes.count) {
                 boxes[i].backgroundColor = colors[i]
             }
         }
-        picker.dismissViewControllerAnimated(true, completion: nil)
+        picker.dismiss(animated: true, completion: nil)
         
     }
     
-    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
-        picker.dismissViewControllerAnimated(true, completion: nil);
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil);
     }
 }

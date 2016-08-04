@@ -28,7 +28,7 @@ struct Cluster<T : ClusteredType> {
 // http://users.eecs.northwestern.edu/~wkliao/Kmeans/
 
 func kmeans<T : ClusteredType>(
-        points: [T],
+        _ points: [T],
         k: Int,
         seed: UInt32,
         distance: ((T, T) -> Float),
@@ -38,17 +38,17 @@ func kmeans<T : ClusteredType>(
     let n = points.count
     assert(k <= n, "k cannot be larger than the total number of points")
 
-    var centroids = points.randomValues(seed, num: k)
-    var memberships = [Int](count: n, repeatedValue: -1)
-    var clusterSizes = [Int](count: k, repeatedValue: 0)
+    var centroids = points.randomValues(seed: seed, num: k)
+    var memberships = [Int](repeating: -1, count: n)
+    var clusterSizes = [Int](repeating: 0, count: k)
     
     var error: Float = 0
     var previousError: Float = 0
     
     repeat {
         error = 0
-        var newCentroids = [T](count: k, repeatedValue: T.identity)
-        var newClusterSizes = [Int](count: k, repeatedValue: 0)
+        var newCentroids = [T](repeating: T.identity, count: k)
+        var newClusterSizes = [Int](repeating: 0, count: k)
         
         for i in 0..<n {
             let point = points[i]
@@ -71,10 +71,10 @@ func kmeans<T : ClusteredType>(
         previousError = error
     } while abs(error - previousError) > threshold
     
-    return Zip2Sequence(centroids, clusterSizes).map { Cluster(centroid: $0, size: $1) }
+    return Zip2Sequence(_sequence1: centroids, _sequence2: clusterSizes).map { Cluster(centroid: $0, size: $1) }
 }
 
-private func findNearestCluster<T : ClusteredType>(point: T, centroids: [T], k: Int, distance: (T, T) -> Float) -> Int {
+private func findNearestCluster<T : ClusteredType>(_ point: T, centroids: [T], k: Int, distance: (T, T) -> Float) -> Int {
     var minDistance = Float.infinity
     var clusterIndex = 0
     for i in 0..<k {
@@ -87,20 +87,20 @@ private func findNearestCluster<T : ClusteredType>(point: T, centroids: [T], k: 
     return clusterIndex
 }
 
-private func randomNumberInRange(range: Range<Int>) -> Int {
-    let interval = range.endIndex - range.startIndex - 1
+private func randomNumberInRange(_ range: CountableRange<Int>) -> Int {
+    let interval = range.upperBound - range.lowerBound - 1
     let buckets = Int(RAND_MAX) / interval
     let limit = buckets * interval
     var r = 0
     repeat {
-        r = Int(rand())
+        r = Int(arc4random())
     } while r >= limit
-    return range.startIndex + (r / buckets)
+    return range.lowerBound + (r / buckets)
 }
 
 private extension Array {
     private func randomValues(seed: UInt32, num: Int) -> [Element] {
-        srand(seed)
+        srandom(seed)
         
         var indices = [Int]()
         indices.reserveCapacity(num)
@@ -112,7 +112,9 @@ private extension Array {
             } while indices.contains(random)
             indices.append(random)
         }
-
+        
         return indices.map { self[$0] }
     }
 }
+
+
